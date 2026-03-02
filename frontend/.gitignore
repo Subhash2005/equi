@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# virtual environment
+.venv/
+env/
+venv/
+
+# secret config
+.env
