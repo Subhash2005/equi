@@ -8,10 +8,13 @@ export const useVoiceAssistant = () => {
     const navigate = useNavigate();
     const { logout } = useAuth();
 
-    const speak = useCallback((text) => {
+    const speak = useCallback((text, onEndCallback = null) => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1;
         utterance.pitch = 1;
+        if (onEndCallback) {
+            utterance.onend = onEndCallback;
+        }
         window.speechSynthesis.speak(utterance);
     }, []);
 
@@ -19,13 +22,13 @@ export const useVoiceAssistant = () => {
         const cmd = command.toLowerCase();
         console.log('Processing voice command:', cmd);
 
-        if (cmd.includes('go home') || cmd.includes('dashboard')) {
+        if (cmd.includes('home') || cmd.includes('dashboard') || cmd.includes('landing')) {
             speak('Navigating to home page');
             navigate('/');
-        } else if (cmd.includes('student')) {
-            speak('Opening student portal');
+        } else if (cmd.includes('student') || cmd.includes('register') || cmd.includes('registration')) {
+            speak('Opening student registration portal');
             navigate('/student');
-        } else if (cmd.includes('daily work')) {
+        } else if (cmd.includes('daily work') || cmd.includes('daily worker')) {
             speak('Opening daily work sector');
             navigate('/daily/work');
         } else if (cmd.includes('disability') || cmd.includes('jobs')) {
@@ -36,7 +39,7 @@ export const useVoiceAssistant = () => {
             logout();
             navigate('/');
         } else if (cmd.includes('help')) {
-            speak('You can say commands like: go home, student portal, daily work, disability jobs, or logout.');
+            speak('You can say commands like: go home, registration, daily work, disability jobs, or logout.');
         } else {
             speak(`I heard ${cmd}, but I don't recognize that command. Say help for options.`);
         }
@@ -77,7 +80,11 @@ export const useVoiceAssistant = () => {
         };
 
         if (isListening) {
-            recognition.start();
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error("Could not start speech recognition:", e);
+            }
         }
 
         return () => {
@@ -87,11 +94,12 @@ export const useVoiceAssistant = () => {
 
     const toggleListening = () => {
         if (!isListening) {
-            speak('Voice mode activated. How can I help you?');
-            setIsListening(true);
+            speak('Voice mode activated. How can I help you?', () => {
+                setIsListening(true);
+            });
         } else {
-            speak('Voice mode deactivated.');
             setIsListening(false);
+            speak('Voice mode deactivated.');
         }
     };
 
